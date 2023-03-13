@@ -16,7 +16,7 @@ def send_show_command(device, commands):
 
 
 if __name__ == "__main__":
-    with open("devices.yaml") as f, open("sw_data.csv") as d:
+    with open("devices.yaml") as f, open("sw_data.csv") as d: #open devices yaml file and csv file with template
         devices = yaml.safe_load(f)
         reader = csv.reader(d) #variable witch data 
         for protocol,ip,direction in reader:
