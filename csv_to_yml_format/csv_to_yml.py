@@ -6,7 +6,7 @@ yaml_filename = excel_filename.replace('csv', 'yaml')
 
 common_name = "generate prefix"
 netbox = ""
-url = '"ansible_ip_addess"'
+url = '"netbox ip address"'
 token = "apy key netbox"
 data = ""
 state = "present"
