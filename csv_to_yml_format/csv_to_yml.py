@@ -1,7 +1,7 @@
 import csv
 import yaml
 
-excel_filename = "IP-addresses_172.csv"
+excel_filename = "tst.csv"
 yaml_filename = excel_filename.replace('csv', 'yaml')
 
 common_name = "generate prefix"
