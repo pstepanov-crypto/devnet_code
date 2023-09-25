@@ -5,7 +5,7 @@ from smbprotocol.session import Session
 from smbprotocol.tree import TreeConnect
 
 # Define your NetBox API URL and authentication credentials
-NB_URL = "http://172.16.125.6"
+NB_URL = "netbox ip address"
 API_TOKEN = "token"
 
 # Initialize the NetBox API client
