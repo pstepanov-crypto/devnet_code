@@ -55,7 +55,7 @@ def scanNet(ip):
         print(f"Scanning device {hostname} with IP: {ip}, Serial Number: {serial_number}, Model: {model}")
 
        # before need create scan_results.csv file
-       with open("scan_results.csv", mode="r") as file:
+       with open("scan_results.csv", mode="r+") as file:
            reader = csv.reader(file)
            serial_in_file = [row[3] for row in reader]
 
