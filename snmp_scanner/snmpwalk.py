@@ -54,12 +54,18 @@ def scanNet(ip):
  
         print(f"Scanning device {hostname} with IP: {ip}, Serial Number: {serial_number}, Model: {model}")
 
+       # before need create scan_results.csv file
+       with open("scan_results.csv", mode="r") as file:
+        reader = csv.reader(file)
+        serial_in_file = [row[0] for row in reader]
 
-        # Save the results to a CSV file
-        with open("descavery.csv", mode="a", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow([model, hostname, ip, serial_number])
-
+       if serial_number not in serial_in_file:
+        # Append the data to the CSV file
+            with open("scan_results.csv", mode="a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([model, hostname, ip, serial_number])
+       else:
+            print(f"Hostname {hostname} already in file, skipping.")
    
 
     except EasySNMPError as e:
