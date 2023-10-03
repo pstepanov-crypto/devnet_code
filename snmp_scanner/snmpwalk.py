@@ -56,8 +56,8 @@ def scanNet(ip):
 
        # before need create scan_results.csv file
        with open("scan_results.csv", mode="r") as file:
-        reader = csv.reader(file)
-        serial_in_file = [row[0] for row in reader]
+           reader = csv.reader(file)
+           serial_in_file = [row[0] for row in reader]
 
        if serial_number not in serial_in_file:
         # Append the data to the CSV file
