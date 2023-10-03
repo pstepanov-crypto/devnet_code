@@ -65,7 +65,7 @@ def scanNet(ip):
                 writer = csv.writer(file)
                 writer.writerow([model, hostname, ip, serial_number])
        else:
-            print(f"Hostname {hostname} already in file, skipping.")
+            print(f"Serial Number {serial_number} already in file, skipping.")
    
 
     except EasySNMPError as e:
