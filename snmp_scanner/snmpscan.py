@@ -83,11 +83,11 @@ def scanNet(ip):
 
     except EasySNMPError as e:
         print(f"Error scanning device {ip}: {e}")
-        if "authorizationError" in str(e):
+        if "authorizationError" or "denied" in str(e):
          SNMP_COMMUNITY = "public2"  # Change SNMP_COMMUNITY on SNMP error
-        elif "authorizationError" in str(e):
+        elif "authorizationError" or "denied" in str(e):
          SNMP_COMMUNITY = "public3"
-        elif "authorizationError" in str(e):
+        elif "authorizationError" or "denied" in str(e):
          SNMP_COMMUNITY = "public4"
  
 
