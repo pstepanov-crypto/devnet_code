@@ -1,4 +1,4 @@
-#python3 snmpwalk.py -s 192.168.0.0/24
+#python3 snmpscan.py -s 192.168.0.0/24
 from easysnmp import Session , EasySNMPError
 import getopt
 import sys
