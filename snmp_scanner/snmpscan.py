@@ -32,8 +32,10 @@ def scanNet(ip):
             serial_number = session.get(".1.3.6.1.2.1.47.1.1.1.1.11.16842753").value #Huawei value
         if serial_number.endswith("STANCE"):
             serial_number = session.get(".1.3.6.1.2.1.47.1.1.1.1.11.67108992").value
+        if serial_number == "":
+            serial_number = session.get(".1.3.6.1.2.1.47.1.1.1.1.11.2001").value
 
- 
+     
         if model.endswith("UPOE+E") or model.endswith("STANCE"):
             model = session.get(".1.3.6.1.2.1.47.1.1.1.1.13.1").value
         if model.endswith("STANCE"):
