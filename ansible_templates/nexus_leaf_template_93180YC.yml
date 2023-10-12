@@ -47,7 +47,7 @@
       cisco.nxos.nxos_vlans:
         vlan_id: 905
         interface: Vlan905
-        vrf: main-dci
+        vrf: main-dci-test
         ip_address: 172.16.0.1/24
         ipv6_redirects: no
         ip_redirects: no
