@@ -1,0 +1,59 @@
+---
+- name: Configure nexus
+  hosts: nexus
+  gather_facts: no
+ 
+  tasks:
+    - name: Configure VLAN 905
+      cisco.nxos.nxos_vlans:
+        vlan_id: 905
+        name: Test-DCI-1
+        state: present
+      register: vlan_result  
+     
+    - name: Display VLAN result
+      debug:
+        var: vlan_result  
+
+             
+    - name: Configure NVE1
+      cisco.nxos.nxos_vxlan_vtep:
+        interface: nve1
+        vni: 905
+        ingress_replication_protocol: bgp
+        state: present
+      register: nve_result
+
+    - name: Display NVE1 result
+      debug:
+        var: nve_result
+
+    - name: Configure EVPN VNI 905
+      cisco.nxos.nxos_evpn_vni:
+        vni: 905
+        route_distinguisher: auto
+        route_target_import: auto
+        route_target_export: auto
+        l2_vni: yes
+        state: present
+      register: evpn_vni_result
+
+    - name: Display EVPN VNI result
+      debug:
+        var: evpn_vni_result
+       
+       
+    - name: Configure Interface VLAN 905
+      cisco.nxos.nxos_vlans:
+        vlan_id: 905
+        interface: Vlan905
+        vrf: main-dci
+        ip_address: 172.16.0.1/24
+        ipv6_redirects: no
+        ip_redirects: no
+        fabric_forwarding_mode: anycast-gateway
+      register: interface_vlan_result
+
+    - name: Display Interface VLAN result
+      debug:
+        var: interface_vlan_result
