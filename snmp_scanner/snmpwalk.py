@@ -1,3 +1,4 @@
+#python3 snmpwalk.py -s 192.168.0.0/24
 from easysnmp import Session , EasySNMPError
 import getopt
 import sys
@@ -9,7 +10,7 @@ import csv  # Import the csv module
 SNMP_COMMUNITY = "public"
 
  
-#Use snmpwalk for scan device and find an oid value
+#Use snmpwalk or other oid scanner for scan device and find an oid value that you need collect
 def scanNet(ip):
     global SNMP_COMMUNITY
      session = Session(hostname=ip, community=SNMP_COMMUNITY, version=2, timeout = 0.01)  # Use SNMP
