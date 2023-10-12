@@ -13,7 +13,7 @@ SNMP_COMMUNITY = "public"
 #Use snmpwalk or other oid scanner for scan device and find an oid value that you need to collect
 def scanNet(ip):
     global SNMP_COMMUNITY
-     session = Session(hostname=ip, community=SNMP_COMMUNITY, version=2, timeout = 0.01)  # Use SNMP
+     session = Session(hostname=ip, community=SNMP_COMMUNITY, version=2, timeout = 0.04)  # Use SNMP, you can change timeout if you don`t have time :)
  
 
     try:
