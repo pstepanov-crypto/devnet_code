@@ -26,7 +26,7 @@ for ip in network:
         output = net_connect.send_command('show inventory | include SFP | SN')
 
         # Regular expression to extract SFP information
-        match = re.findall(r'(SFP-\S+) (?:\s*,\s*VID:\s*[^,]+,\s*) (SN:\s*[^\s]+)', output)
+        match = re.findall(r'(SFP-\S+) (?:\s*,\s*VID:\s*[^,]+,\s*) SN:(\s*[^\s]+)', output)
 
         # Determine the hostmame
         hostname = device_params['ip']
