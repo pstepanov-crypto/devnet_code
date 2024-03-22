@@ -3,6 +3,7 @@
 #2. after - sudo tar -xzf v3.6.4.tar.gz -C /opt
 #3. текущую папку netbox нужно переименовать в netbox-5.7.0 ,а новую версию (3.6.4) в просто netbox
 #4. и затем запускай скрипт с позиции sudo cp /opt/netbox-5.7.0/netbox/netbox/local_requirements.txt /opt/netbox/netbox/netbox/
+#5. Не забудь отключить плагины перед обновлением
 ####python3 netbox_update.py -f 5.7.0 -t 3.6.4
 import argparse
 parser = argparse.ArgumentParser(description='A simple script to help with netbox upgrades')
