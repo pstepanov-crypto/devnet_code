@@ -30,7 +30,7 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 sh_output = net_connect.send_command('show ip access-lists vty')
 
                 if 'Standard IP access list vty' in sh_output:
-                    output = net_connect.send_config_set(['ip access-list standard vty', 'permit 10.7.255.20', 'end', 'wr'])
+                    output = net_connect.send_config_set(['ip access-list standard vty', 'permit 192.168.0.20', 'end', 'wr'])
                 
                 # Determine the hostname
                 hostname = device_params['ip']
@@ -43,7 +43,7 @@ with ThreadPoolExecutor(max_workers=5) as executor:
             # For nexus i use try - except
             except '\\ terminal\\ length\\ 0' as x:
                 device_type = 'cisco_nxos'
-                output = net_connect.send_config_set(['ip access-list vty', 'permit ip 10.7.255.26/32 any', 'end', 'copy run startup-config'])
+                output = net_connect.send_config_set(['ip access-list vty', 'permit ip 192.168.0.20/32 any', 'end', 'copy run startup-config'])
                 print(f"SSH Connection Error: {e}")
                 
             except SSHException as e:
