@@ -32,8 +32,10 @@ with ThreadPoolExecutor(max_workers=5) as executor:
 
             if 'Standard IP access list vty' in sh_output:
                 output = net_connect.send_config_set(['ip access-list standard vty', 'permit 10.7.255.20', 'end', 'wr'])
-
+                
+            # Need change device type for Nexus before send command
             elif 'IP access list vty' in sh_output:
+                device_type = 'cisco_nxos'
                 output = net_connect.send_config_set(['ip access-list vty', 'permit ip 10.7.255.20/32 any', 'end', 'copy run startup-config'])
 
             else:
