@@ -14,7 +14,7 @@ network_ranges = ['192.168.0.0/24', '192.168.1.0/24']
 with open('device_params.yaml') as file:
     device_params = yaml.load(file, Loader=yaml.FullLoader)
 
-# Threads is not work for multiple network ranges
+# Threads for multiple network ranges
 with ThreadPoolExecutor(max_workers=5) as executor:
     for network_range in network_ranges:
         network = ipaddress.ip_network(network_range)
