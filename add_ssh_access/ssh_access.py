@@ -8,7 +8,7 @@ from itertools import repeat
 from concurrent.futures import ThreadPoolExecutor
 
 # Define the network ranges
-network_ranges = ['10.6.250.23/32', '172.16.0.17/32']
+network_ranges = ['192.168.0.0/24', '192.168.1.0/24']
 
 
 
