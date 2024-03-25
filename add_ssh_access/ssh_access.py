@@ -35,7 +35,7 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 # Determine the hostname
                 hostname = device_params['ip']
                 print(f"Command is committed for {hostname}")
-                #print(sh_output)
+
                 
                 # Disconnect from the device
                 net_connect.disconnect()
