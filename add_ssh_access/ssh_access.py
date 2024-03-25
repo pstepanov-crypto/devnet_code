@@ -48,7 +48,7 @@ for network_range in network_ranges:
         except '\\ terminal\\ length\\ 0' as x:
             device_type = 'cisco_nxos'
             output = net_connect.send_config_set(['ip access-list vty', 'permit ip 10.7.255.26/32 any', 'end', 'copy run startup-config'])
-            print(f"SSH Connection Error: {e}")
+            print(f"SSH Connection Error: {x}")
 
         except SSHException as e:
             print(f"SSH Connection Error: {e}")
