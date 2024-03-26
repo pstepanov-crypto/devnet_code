@@ -39,13 +39,7 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 
                 # Disconnect from the device
                 net_connect.disconnect()
-                
-            # For nexus i use try - except
-            except '\\ terminal\\ length\\ 0' as x:
-                device_type = 'cisco_nxos'
-                output = net_connect.send_config_set(['ip access-list vty', 'permit ip 192.168.0.20/32 any', 'end', 'copy run startup-config'])
-                print(f"SSH Connection Error: {e}")
-                
+               
             except SSHException as e:
                 print(f"SSH Connection Error: {e}")
                 
