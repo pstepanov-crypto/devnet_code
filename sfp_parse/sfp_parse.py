@@ -8,7 +8,7 @@ from itertools import repeat
 from concurrent.futures import ThreadPoolExecutor
 
 # Define the network ranges
-network_ranges = ['172.18.58.0/24', '172.16.224.0/24', '10.2.255.0/24', '10.6.2.0/24']
+network_ranges = ['192.168.0.0/24', '192.168.1.0/24']
 
 # Define the device parameters
 with open('device_params.yaml') as file:
