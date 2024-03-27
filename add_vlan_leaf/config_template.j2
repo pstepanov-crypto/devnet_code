@@ -1,4 +1,25 @@
-ip access-list standard vty
-permit 192.168.0.10
+vlan 111
+name test
+interface Vlan111
+description test
+no shutdown
+mtu 9216
+vrf member test
+no ip redirects
+ip address 192.168.0.0/24
+no ipv6 redirects
+fabric forwarding mode anycast-gateway
+exit
+interface nve1
+member vni 111
+multisite ingress-replication
+ingress-replication protocol bgp
+exit
+exit
+evpn
+vni 111 l2
+rd auto
+route-target import auto
+route-target export auto
 end
-wr
+copy run startup-config
