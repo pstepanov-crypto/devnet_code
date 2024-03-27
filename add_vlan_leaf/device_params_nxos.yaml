@@ -1,0 +1,3 @@
+device_type: cisco_nxos
+username: cisco
+password: cisco
