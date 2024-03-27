@@ -8,7 +8,7 @@ from itertools import repeat
 from concurrent.futures import ThreadPoolExecutor
 
 #Try to use address range for future
-#[ipaddr for ipaddr in ipaddress.summarize_address_range(ipaddress.IPv4Address('10.6.250.21'),ipaddress.IPv4Address('10.6.250.34'))]
+#[ipaddr for ipaddr in ipaddress.summarize_address_range(ipaddress.IPv4Address('192.168.0.1'),ipaddress.IPv4Address('192.168.0.20'))]
 
 
 # Define the network ranges
