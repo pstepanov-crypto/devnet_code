@@ -1,7 +1,7 @@
-#add backup nxos and huawei devices
 # Imports
 from netmiko import ConnectHandler
 import csv
+import openpyxl
 import logging
 import datetime
 import multiprocessing as mp
@@ -11,8 +11,8 @@ import sys
 import os
 
 # Module 'Global' variables
-DEVICE_FILE_PATH = 'devices.csv'  # CSV file containing device information, including device_type
-BACKUP_DIR_PATH = '/home/user'  # Complete path to backup directory
+DEVICE_FILE_PATH = '/root/project/backup/devices.csv'  # CSV file containing device information, including device_type
+BACKUP_DIR_PATH = '/data/public/backup_network_devices/'  # Complete path to backup directory
 
 def enable_logging():
     # This function enables netmiko logging for reference
@@ -27,7 +27,7 @@ def get_devices_from_file(device_file):
     device_list = list()
     device = dict()
 
-    # Reading a CSV file with ',' as a delimiter
+    # Reading a xlsx file with ',' as a delimiter
     with open(device_file, 'r') as f:
         reader = csv.DictReader(f, delimiter=',')
 
@@ -63,8 +63,8 @@ def connect_to_device(device):
         host=device['ip'],
         username=device['username'],
         password=device['password'],
-        device_type=device['device_type'],
-        secret=device['secret']
+        secret=device['secret'],
+        device_type=device['device_type']
     )
 
     print('Opened connection to ' + device['ip'])
@@ -105,7 +105,11 @@ def create_backup(connection, backup_file_path, hostname, device_type):
         connection.enable()
         if device_type == "cisco_ios" or device_type == "cisco_nxos":
             output = connection.send_command('sh run')
+        elif device_type == "cisco_asa" or device_type == "cisco_ftd":
+            output = connection.send_command('sh run')
         elif device_type == "huawei":
+            output = connection.send_command('display current-configuration')
+        elif device_type == "hp_procurve" or device_type == "hp_comware" or device_type == "hp_arubaoss":
             output = connection.send_command('display current-configuration')
 
         # Creating a backup file and writing command output to it
