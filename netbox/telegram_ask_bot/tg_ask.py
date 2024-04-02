@@ -18,7 +18,7 @@ dispatcher = updater.dispatcher
 user_data = {}
 
 # List of expected fields for the form
-expected_fields = ["side_a_device", "side_a_name", "side_a_type ( dcim interface, dcim.frontport, dcim.rearport)", "label", "side_b_device", "side_b_name", "side_b_type ( dcim interface, dcim.frontport, dcim.rearport)"]
+expected_fields = ["side_a_device", "side_a_name", "side_a_type ( dcim.interface, dcim.frontport, dcim.rearport)", "label", "side_b_device", "side_b_name", "side_b_type ( dcim.interface, dcim.frontport, dcim.rearport)"]
 
 # Define the start command
 def start(update: Update, context: CallbackContext) -> None:
