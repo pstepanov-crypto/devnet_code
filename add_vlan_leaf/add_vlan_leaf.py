@@ -35,7 +35,7 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 # Connect to the device
                 net_connect = ConnectHandler(**device_params)
 
-                # Render J2 template for different command
+                # Render J2 template for different command try to use for future
                 #liverpool = {"id": "11", "name": "Liverpool", "int": "Gi1/0/17", "ip": "10.1.1.10"}
                 #rendered_config = template.render(liverpool)
 
