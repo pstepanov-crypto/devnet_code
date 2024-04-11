@@ -30,16 +30,20 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 sh_output = net_connect.send_command('show ip access-lists vty')
 
                 if 'Standard IP access list vty' in sh_output:
-                    output = net_connect.send_config_set(['ip access-list standard vty', 'permit 192.168.0.20', 'end', 'wr'])
+                    output = net_connect.send_config_set(['ip access-list standard vty', 'permit 192.168.0.0', 'end', 'wr'])
                 
                 # Determine the hostname
                 hostname = device_params['ip']
+                
+                # Write success in the logfile
+                with open("committed.csv", mode="a", newline="") as file:
+                     writer = csv.writer(file)
+                     writer.writerow([f"Command is committed for {hostname}"])
                 print(f"Command is committed for {hostname}")
 
-                
                 # Disconnect from the device
                 net_connect.disconnect()
-               
+                
             except SSHException as e:
                 print(f"SSH Connection Error: {e}")
                 
