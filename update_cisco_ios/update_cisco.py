@@ -3,7 +3,6 @@ import ipaddress
 import yaml
 import time
 from paramiko.ssh_exception import SSHException
-from jinja2 import Environment, FileSystemLoaderghb
 from concurrent.futures import ThreadPoolExecutor
 
 
