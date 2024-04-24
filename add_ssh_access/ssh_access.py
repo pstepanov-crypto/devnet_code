@@ -31,6 +31,8 @@ with ThreadPoolExecutor(max_workers=5) as executor:
 
                 if 'Standard IP access list vty' in sh_output:
                     output = net_connect.send_config_set(['ip access-list standard vty', 'permit 192.168.0.0', 'end', 'wr'])
+                else:
+                    net_connect.disconnect()
                 
                 # Determine the hostname
                 hostname = device_params['ip']
