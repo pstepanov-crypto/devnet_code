@@ -30,7 +30,7 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 sh_output = net_connect.send_command('show ip access-lists vty', expect_string='\w')
 
                 if 'Standard IP access list vty' in sh_output:
-                    output = net_connect.send_config_set(['ip access-list standard vty', 'permit 192.168.0.0', 'end', 'wr'])
+                    output = net_connect.send_config_set(['ip access-list standard vty', 'permit 192.168.0.1', 'end', 'wr'])
                 elif 'IP access list vty' in sh_output:
                     output = net_connect.send_config_set(['ip access-list vty', 'permit ip 192.168.0.1/32 any', 'end', 'copy run startup-config'])
                 else:
