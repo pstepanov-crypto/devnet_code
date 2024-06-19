@@ -98,7 +98,7 @@ def add_device_to_netbox(hostname, pid, sn, site_id):
         print(f"Failed to add device {hostname} to NetBox: {response.status_code} - {response.text}")
 
 # Loop through each network range
-with ThreadPoolExecutor(max_workers=5) as executor:
+with ThreadPoolExecutor(max_workers=2) as executor:
     for network_range in network_ranges:
         network = ipaddress.ip_network(network_range)
 
