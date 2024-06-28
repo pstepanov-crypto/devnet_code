@@ -9,13 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 # Define the network ranges
 network_ranges = ['192.168.0.0/24', '192.168.1.0/24']
 
-# Define the device parameters
-with open('device_params_ios.yaml') as file:
+# Define the device parameters Pattern not detected
+with open('device_params_nxos.yaml') as file:
     device_params = yaml.load(file, Loader=yaml.FullLoader)
 
 # NetBox API configuration
-netbox_url = 'http:'  # Replace with your NetBox URL
-netbox_token = ' '  # Replace with your NetBox API token
+netbox_url = 'http://172.16.125.6/api/'  # Replace with your NetBox URL
+netbox_token = 'c0eeb3883609915b8c13a3c0a1292406878e8eec'  # Replace with your NetBox API token
 headers = {
     'Authorization': f'Token {netbox_token}',
     'Content-Type': 'application/json',
@@ -29,6 +29,15 @@ def get_netbox_id(endpoint, name):
         return response.json()['results'][0]['id']
     else:
         print(f"Failed to get ID for {name} from {endpoint}")
+        return None
+
+# Function to fetch NetBox device type ID by PID
+def get_device_type_id_by_pid(pid):
+    response = requests.get(f'{netbox_url}dcim/device-types/', headers=headers, params={'part_number': pid})
+    if response.status_code == 200 and response.json()['count'] > 0:
+        return response.json()['results'][0]['id']
+    else:
+        print(f"Failed to get device type ID for PID {pid}")
         return None
 
 # Static IDs based on your example
@@ -47,29 +56,8 @@ def determine_site_id(network_range):
 # Function to add a device to NetBox
 def add_device_to_netbox(hostname, pid, sn, site_id):
     # Determine the device_type_id based on pid
-    if 'WS-C4510R+E' in pid:
-        device_type_id = 310
-    elif 'WS-C2960+48TC-L' in pid or 'WS-C2960G-48TC-L' in pid:
-        device_type_id = 315
-    elif 'N5K-C5548UP' in pid:
-        device_type_id = 318
-    elif 'AIR-CT5760' in pid:
-        device_type_id = 321
-    elif 'WS-C2960RX-24PS-L' in pid:
-        device_type_id = 322
-    elif 'WS-C3550-48-SMI' in pid:
-        device_type_id = 327
-    elif 'C9300-48P' in pid:
-        device_type_id = 328
-    elif 'C9300L-48P-4X' in pid:
-        device_type_id = 329
-    elif 'C9500-24Y4C' in pid:
-        device_type_id = 330
-    elif 'CISCO2911/K9' in pid:
-        device_type_id = 331
-    elif 'WS-C6509-E' in pid:
-        device_type_id = 333
-    else:
+    device_type_id = get_device_type_id_by_pid(pid)
+    if not device_type_id:
         print(f"Unknown device type for PID {pid}, skipping.")
         return
 
@@ -112,7 +100,7 @@ with ThreadPoolExecutor(max_workers=2) as executor:
                 # Connect to the device
                 net_connect = ConnectHandler(**device_params)
 
-                # Send the command to get sfp information
+                # Send the command to get inventory information
                 output = net_connect.send_command('show inventory')
 
                 # Regular expression to extract device information
