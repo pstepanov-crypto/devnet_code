@@ -14,8 +14,8 @@ with open('device_params_nxos.yaml') as file:
     device_params = yaml.load(file, Loader=yaml.FullLoader)
 
 # NetBox API configuration
-netbox_url = 'http://172.16.125.6/api/'  # Replace with your NetBox URL
-netbox_token = 'c0eeb3883609915b8c13a3c0a1292406878e8eec'  # Replace with your NetBox API token
+netbox_url = ''  # Replace with your NetBox URL
+netbox_token = ''  # Replace with your NetBox API token
 headers = {
     'Authorization': f'Token {netbox_token}',
     'Content-Type': 'application/json',
