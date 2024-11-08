@@ -14,8 +14,8 @@ with open('device_params_nxos.yaml') as file:
     device_params = yaml.load(file, Loader=yaml.FullLoader)
 
 # NetBox API configuration
-netbox_url = ''  # Replace with your NetBox URL
-netbox_token = ''  # Replace with your NetBox API token
+netbox_url = ''  # Replace with your NetBox URL !!!
+netbox_token = ''  # Replace with your NetBox API token !!!
 headers = {
     'Authorization': f'Token {netbox_token}',
     'Content-Type': 'application/json',
@@ -40,6 +40,13 @@ def get_device_type_id_by_pid(pid):
         print(f"Failed to get device type ID for PID {pid}")
         return None
 
+# Function to check if hostname exists in NetBox
+def check_hostname_exists(hostname):
+    response = requests.get(f'{netbox_url}dcim/devices/', headers=headers, params={'name': hostname})
+    if response.status_code == 200 and response.json()['count'] > 0:
+        return True
+    return False
+
 # Static IDs based on your example
 device_role_id = 46
 site = 45
@@ -52,6 +59,15 @@ def add_device_to_netbox(hostname, pid, sn, site_id, ip_address):
     if not device_type_id:
         print(f"Unknown device type for PID {pid}, skipping.")
         return None
+
+    original_hostname = hostname  # Save the original hostname for suffix generation
+    suffix_count = 1
+
+    # Ensure the hostname is unique
+    while check_hostname_exists(hostname):
+        # Modify the hostname with a stack suffix if it already exists
+        hostname = f"{original_hostname}_stack{suffix_count}"
+        suffix_count += 1
 
     # Create the device data
     device_data = {
@@ -72,7 +88,7 @@ def add_device_to_netbox(hostname, pid, sn, site_id, ip_address):
     if response.status_code == 200 and len(response.json()['results']) > 0:
         print(f"Device with serial {sn} already exists in NetBox, skipping.")
         return response.json()['results'][0]['id']
-        
+
     # Add the device to NetBox
     response = requests.post(f'{netbox_url}dcim/devices/', headers=headers, json=device_data)
     if response.status_code == 201:
@@ -121,15 +137,6 @@ def remove_inventory_item(item_id):
     else:
         print(f"Failed to remove inventory item {item_id} from NetBox: {response.status_code} - {response.text}")
 
-# Function to update the site of a device in NetBox
-def update_device_site(device_id, new_site_id):
-    update_data = {'site': new_site_id}
-    response = requests.patch(f'{netbox_url}dcim/devices/{device_id}/', headers=headers, json=update_data)
-    if response.status_code == 200:
-        print(f"Device {device_id} moved to site {new_site_id}.")
-    else:
-        print(f"Failed to move device {device_id} to site {new_site_id}: {response.status_code} - {response.text}")
-
 # Loop through each network range
 with ThreadPoolExecutor(max_workers=2) as executor:
     for network_range in network_ranges:
@@ -155,7 +162,7 @@ with ThreadPoolExecutor(max_workers=2) as executor:
                 matches = re.findall(regex, output)
 
                 # Regular expression to extract device PID and SN
-                match2 = re.search(r'PID:\s*(\S+)\s*,.*SN:\s*(\S+)', output)
+                match2 = re.findall(r'PID:\s*(\S+)\s*,.*SN:\s*(\S+)', output)
                 match3 = re.findall(r"(.*?)\s+uptime", output3)
                 match4 = re.findall(r"Device name: (.+)", output3)
                 
@@ -166,9 +173,10 @@ with ThreadPoolExecutor(max_workers=2) as executor:
                 
                 # Add the device to NetBox
                 if match2:
-                    pid = match2.group(1)
-                    sn = match2.group(2)
-                    device_id = add_device_to_netbox(hostname, pid, sn, site_id, str(ip))
+                    for match in match2:
+                        pid = match[0]
+                        sn = match[1]
+                        device_id = add_device_to_netbox(hostname, pid, sn, site_id, str(ip))
 
                 # Get the current inventory items from NetBox
                 current_inventory = get_current_inventory(device_id) if device_id else []
@@ -176,7 +184,7 @@ with ThreadPoolExecutor(max_workers=2) as executor:
                 # Extract the current inventory SFP serials
                 current_inventory_serials = {item['serial']: item['id'] for item in current_inventory}
 
-                # Add inventory items to the device if any matches were found
+               # Add inventory items to the device if any matches were found
                 new_inventory_serials = set()
                 if matches and device_id:
                     for sfp_info in matches:
@@ -195,18 +203,9 @@ with ThreadPoolExecutor(max_workers=2) as executor:
                 # Disconnect from the device
                 net_connect.disconnect()
 
-                # If SSH is successful, ensure the device is in the active site
-                if device_id:
-                    update_device_site(device_id, site_id)
-
             except SSHException as e:
                 print(f"SSH Connection Error: {e}")
-                # If SSH fails, move the device to the deactivated site
-                if device_id:
-                    update_device_site(device_id, site_deactivated)
+                # Handle connection errors as needed
 
             except Exception as ex:
                 print(f"An error occurred: {ex}")
-                # If SSH fails, move the device to the deactivated site
-                if device_id:
-                    update_device_site(device_id, site_deactivated)
