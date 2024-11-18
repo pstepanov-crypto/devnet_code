@@ -1,13 +1,13 @@
-from netmiko import ConnectHandler
 import ipaddress
 import re
 import csv
 import yaml
+from netmiko import ConnectHandler
 from paramiko.ssh_exception import SSHException
 from concurrent.futures import ThreadPoolExecutor
 
 # Define the network ranges
-network_ranges = ['192.168.0.1/32', '192.168.0.2/32']
+network_ranges = ['192.168.1.1/32']
 
 # Define the device parameters
 with open('device_params_nxos.yaml') as file:
@@ -25,18 +25,14 @@ with ThreadPoolExecutor(max_workers=5) as executor:
                 # Connect to the device
                 net_connect = ConnectHandler(**device_params)
 
-                # Disable paging (turn off "press space for more" prompts)
-                #net_connect.send_command("terminal length 0")
-
                 # Send the command to get MAC address information
-                output = net_connect.send_command('show mac address-table')
+                output = net_connect.send_command('sh mac address-table | grep *')
 
-                
                 # Determine the hostname
                 hostname = device_params['ip']
 
-                # Updated regular expression to extract MAC address and interface from lines starting with '*'
-                pattern = r'\*\s+\d+\s+(\d{4}\.\w{4}\.\w{4})\s+\S+\s+\S+\s+\S+\s+\S+\s+(\w+/\d+)'
+                # Regular expression to extract MAC address and interface
+                pattern = r'\*\s+\d+\s+([\da-f]{4}\.[\da-f]{4}\.[\da-f]{4})\s+\S+\s+\S+\s+\S+\s+\S+\s+(?!Po10$|Po11$)(\S+)'
                 matches = re.findall(pattern, output)
 
                 # Debug: print matches to verify if regular expression works
