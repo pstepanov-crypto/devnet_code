@@ -1,4 +1,4 @@
-#add devices with stacs
+#add devices with stacks
 import requests
 import certifi
 from netmiko import ConnectHandler
