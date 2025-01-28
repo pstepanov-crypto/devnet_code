@@ -12,6 +12,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 # Your bot token from BotFather
 TOKEN = ""
 
+# Group ID where the bot is allowed to be used
+ALLOWED_GROUP_ID = 
+
 # Initialize the stop event for controlling the cyclic loop
 stop_event = Event()
 
@@ -27,9 +30,25 @@ field_options = {
     "side_b_type (dcim.interface, dcim.frontport, dcim.rearport)": ["dcim.interface", "dcim.frontport", "dcim.rearport"]
 }
 
+# Function to check if the user is a member of the allowed group
+async def is_user_allowed(user_id: int, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    try:
+        chat_member = await context.bot.get_chat_member(chat_id=ALLOWED_GROUP_ID, user_id=user_id)
+        # Check if the user is a member, administrator, or creator of the group
+        return chat_member.status in ["member", "administrator", "creator"]
+    except Exception as e:
+        logging.error(f"Error checking user membership: {e}")
+        return False
+
 # Define the start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
+
+    # Check if the user is allowed to use the bot
+    if not await is_user_allowed(user_id, context):
+        await update.message.reply_text("You are not allowed to use this bot.")
+        return
+
     stop_event.clear()  # Clear the stop event to start the loop again
 
     # Initialize user-specific data
@@ -59,6 +78,12 @@ async def ask_for_field(update: Update, context: ContextTypes.DEFAULT_TYPE, user
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     user_id = query.from_user.id
+
+    # Check if the user is allowed to use the bot
+    if not await is_user_allowed(user_id, context):
+        await query.answer("You are not allowed to use this bot.", show_alert=True)
+        return
+
     current_field = expected_fields[user_data[user_id]['current_field_index']]
 
     # Store the selected option
@@ -88,6 +113,11 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # Define the handle_message function
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
+
+    # Check if the user is allowed to use the bot
+    if not await is_user_allowed(user_id, context):
+        await update.message.reply_text("You are not allowed to use this bot.")
+        return
 
     # Check if all fields have been collected
     if user_data[user_id]['current_field_index'] >= len(expected_fields):
