@@ -1,3 +1,4 @@
+#this bot ask info for cable termination
 import logging
 import os
 import pandas as pd
