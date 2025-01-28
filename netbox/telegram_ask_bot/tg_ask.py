@@ -1,8 +1,8 @@
 import logging
 import os
 import pandas as pd
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters, CallbackQueryHandler
 from threading import Event
 import asyncio
 
@@ -21,6 +21,12 @@ user_data = {}
 # List of expected fields for the form
 expected_fields = ["side_a_device", "side_a_name", "side_a_type (dcim.interface, dcim.frontport, dcim.rearport)", "label", "side_b_device", "side_b_name", "side_b_type (dcim.interface, dcim.frontport, dcim.rearport)"]
 
+# Predefined options for some fields
+field_options = {
+    "side_a_type (dcim.interface, dcim.frontport, dcim.rearport)": ["dcim.interface", "dcim.frontport", "dcim.rearport"],
+    "side_b_type (dcim.interface, dcim.frontport, dcim.rearport)": ["dcim.interface", "dcim.frontport", "dcim.rearport"]
+}
+
 # Define the start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -32,7 +38,52 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         'current_field_index': 0
     }
 
-    await update.message.reply_text(f"Please tell me {expected_fields[user_data[user_id]['current_field_index']]}:")
+    await ask_for_field(update, context, user_id)
+
+# Function to ask for the current field
+async def ask_for_field(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int) -> None:
+    current_field = expected_fields[user_data[user_id]['current_field_index']]
+
+    if current_field in field_options:
+        # Create inline keyboard buttons for predefined options
+        keyboard = [
+            [InlineKeyboardButton(option, callback_data=option)]
+            for option in field_options[current_field]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Please select {current_field}:", reply_markup=reply_markup)
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Please enter {current_field}:")
+
+# Define the callback query handler for inline buttons
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    user_id = query.from_user.id
+    current_field = expected_fields[user_data[user_id]['current_field_index']]
+
+    # Store the selected option
+    user_data[user_id]['data'][current_field] = query.data
+
+    # Move to the next field
+    user_data[user_id]['current_field_index'] += 1
+
+    if user_data[user_id]['current_field_index'] < len(expected_fields):
+        await ask_for_field(update, context, user_id)
+    else:
+        # Save the collected data to CSV
+        await form_csv(update, context)
+        
+        # Reset the data for the next iteration
+        user_data[user_id] = {
+            'data': {},
+            'current_field_index': 0
+        }
+
+        # Ask for the first field again
+        await query.message.reply_text("Thank you! Starting a new form.")
+        await ask_for_field(update, context, user_id)
+
+    await query.answer()
 
 # Define the handle_message function
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -50,7 +101,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         }
 
         # Ask for the first field again
-        await update.message.reply_text(f"Please tell me {expected_fields[user_data[user_id]['current_field_index']]}:")
+        await update.message.reply_text("Thank you! Starting a new form.")
+        await ask_for_field(update, context, user_id)
         return
 
     # Extract the current expected field
@@ -62,7 +114,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Move to the next field
     user_data[user_id]['current_field_index'] += 1
     if user_data[user_id]['current_field_index'] < len(expected_fields):
-        await update.message.reply_text(f"Please tell me {expected_fields[user_data[user_id]['current_field_index']]}:")
+        await ask_for_field(update, context, user_id)
     else:
         # Save the collected data to CSV
         await form_csv(update, context)
@@ -74,7 +126,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         }
 
         # Ask for the first field again
-        await update.message.reply_text(f"Please tell me {expected_fields[user_data[user_id]['current_field_index']]}:")
+        await update.message.reply_text("Thank you! Starting a new form.")
+        await ask_for_field(update, context, user_id)
 
 # Define the form_csv command
 async def form_csv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -123,6 +176,7 @@ def main():
     # Set up handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CallbackQueryHandler(button_callback))
     application.add_handler(CommandHandler('form_csv', form_csv))
     application.add_handler(CommandHandler('clear', clear_csv))
     application.add_handler(CommandHandler('stop', stop))
