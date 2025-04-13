@@ -1,4 +1,4 @@
-#add devices with stacks
+#Скрипт сканирует подсети '192.168.0.0/24', '192.168.1.0/24' итд. и добавляет сетевые устройства через ssh на основе регулярного выражения из команды sh inventory
 import requests
 import certifi
 from netmiko import ConnectHandler
