@@ -1,3 +1,4 @@
+#Скрипт раскидывает по leaf новый vxlan - необходимо доработка для borderlead через J2 template, так как нужна дополнительная команда на boderleaf
 from netmiko import ConnectHandler, NetMikoTimeoutException
 import ipaddress
 import yaml
