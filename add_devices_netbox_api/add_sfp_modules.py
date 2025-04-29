@@ -1,4 +1,4 @@
-# add sfp module inside inventory items
+# Скрипт ориентирован на добавление sfp модели и серийного номера, в inventory items устройства Netbox
 import requests
 import certifi
 from netmiko import ConnectHandler
