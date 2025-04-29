@@ -1,3 +1,4 @@
+#Скрипт сканирует подсети и открывает доступ по ssh , полезно когда доступ есть у одного хоста и нужно для других так же пооткрывать
 from netmiko import ConnectHandler
 import ipaddress
 import re
