@@ -1,3 +1,4 @@
+#Скрипт сканирует подсети и добавляет сетевые устройства в Netbox через api
 import requests
 from netmiko import ConnectHandler
 import ipaddress
