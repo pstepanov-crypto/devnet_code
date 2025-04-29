@@ -1,3 +1,4 @@
+#Скрипт сканирует подсети и добавляет найденные устройства в CSV
 from netmiko import ConnectHandler
 import ipaddress
 import re
