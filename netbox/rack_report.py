@@ -1,3 +1,4 @@
+#Скрипт модуль, для Netbox, проходит по всем стойкам и выводит не занятые юниты
 from extras.reports import Report
 from dcim.models import Rack, Device
 
