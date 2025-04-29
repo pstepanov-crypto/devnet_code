@@ -1,4 +1,4 @@
-# add prefixes through ansible to netbox
+# Старый скрипт, лучше делать это сразу через Api Netbox
 import csv
 import yaml
 
