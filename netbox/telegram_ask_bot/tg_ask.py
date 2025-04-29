@@ -1,4 +1,4 @@
-#this bot ask info for cable termination
+#Бот для телеграма запрашивает в чате соединения (Cables) для устройств циклически, и сохраняет в csv для последующей загрузки в Netbox
 import logging
 import os
 import pandas as pd
