@@ -1,3 +1,4 @@
+#Скрипт делает бэкап разных типов сетевых устройств на основе переменной device_type
 # Imports
 from netmiko import ConnectHandler
 import csv
