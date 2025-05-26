@@ -7,7 +7,7 @@ netbox_url = ''
 api_token = ''  # Укажите ваш токен
 
 # Путь к XLSX-файлу
-xlsx_file_path = 'netbox_add_pref.xlsx'  # Укажите ваш файл
+xlsx_file_path = 'cable.xlsx'  # Укажите ваш файл
 
 # Заголовки для аутентификации
 headers = {
