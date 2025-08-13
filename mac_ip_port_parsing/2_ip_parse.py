@@ -49,7 +49,6 @@ def check_mac_on_device(row):
 
         # Возвращаем результат выполнения команды
         return row + [result_ip]
-AdmiA
     except SSHException as e:
         error_msg = f"Ошибка SSH при подключении к {ip}: {e}"
         logging.error(error_msg)
