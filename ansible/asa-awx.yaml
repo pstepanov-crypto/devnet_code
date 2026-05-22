@@ -1,0 +1,88 @@
+---
+- name: Step 1 - Fetch data from NetBox
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_collections_paths: ["/var/lib/awx/.ansible/collections"]
+    netbox_api_url: ""
+    netbox_token: ""
+
+  tasks:
+    - name: Fetch ACL rules from NetBox
+      uri:
+        url: "{{ netbox_api_url }}"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+          Accept: "application/json"
+        validate_certs: no
+      register: netbox_data
+
+    - name: Add target host to inventory
+      add_host:
+        name: "{{ item.access_list.host_ip }}"
+        groups: dynamic_hosts
+        ansible_host: "{{ item.access_list.host_ip }}"
+        ansible_connection: network_cli
+        ansible_network_os: cisco.asa.asa
+      loop: "{{ netbox_data.json.results }}"
+      when: item.access_list.host_ip is defined
+
+- name: Step 2 - Configure ACL on Cisco ASA
+  hosts: dynamic_hosts
+  gather_facts: no
+  become: yes
+  become_method: enable
+  
+  vars:
+    ansible_network_os: cisco.asa.asa
+    ansible_collections_paths: ["/var/lib/awx/.ansible/collections"]
+    ansible_command_timeout: 60
+    ansible_become_password: "admin123"
+    
+    # Справочник всех масок для Cisco ASA
+    cidr_lookup:
+      '0': '0.0.0.0'
+      '8': '255.0.0.0'
+      '16': '255.255.0.0'
+      '20': '255.255.240.0'
+      '21': '255.255.248.0'
+      '22': '255.255.252.0'
+      '23': '255.255.254.0'
+      '24': '255.255.255.0'
+      '25': '255.255.255.128'
+      '26': '255.255.255.192'
+      '27': '255.255.255.224'
+      '28': '255.255.255.240'
+      '29': '255.255.255.248'
+      '30': '255.255.255.252'
+      '32': '255.255.255.255'
+
+  tasks:
+    - name: Generate and Apply ACL commands
+      cisco.asa.asa_config:
+        lines:
+          - >
+            access-list {{ item.access_list.name }} 
+            line {{ item.index }} 
+            extended {{ item.action }} 
+            {{ item.protocol }} 
+            {% if '/' in (item.source_prefix | default('')) and '.0.0.0/0' not in item.source_prefix %}
+            {{ item.source_prefix.split('/') | first }} {{ cidr_lookup[item.source_prefix.split('/') | last] | default('255.255.255.0') }}
+            {% elif '0.0.0.0/0' in (item.source_prefix | default('')) or item.source_prefix == 'any' %}
+            any
+            {% else %}
+            host {{ item.source_prefix | default('any') }}
+            {% endif %}
+            {% if '/' in (item.destination_prefix | default('')) and '.0.0.0/0' not in item.destination_prefix %}
+            {{ item.destination_prefix.split('/') | first }} {{ cidr_lookup[item.destination_prefix.split('/') | last] | default('255.255.255.0') }}
+            {% elif '0.0.0.0/0' in (item.destination_prefix | default('')) or item.destination_prefix == 'any' %}
+            any
+            {% else %}
+            host {{ item.destination_prefix | default('any') }}
+            {% endif %}
+            {{ 'eq ' + item.destination_ports if item.destination_ports else '' }}
+      loop: "{{ hostvars['localhost']['netbox_data']['json']['results'] }}"
+      when: 
+        - item.access_list is defined
+        - item.access_list.host_ip == inventory_hostname
