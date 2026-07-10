@@ -7,7 +7,6 @@ NetBox Script: выгрузка свободного места в стойка�
 
 import csv
 import os
-from datetime import datetime
 from io import BytesIO, StringIO
 
 from dcim.models import Device, Rack
@@ -181,13 +180,17 @@ class RackUnitSpaceExport(Script):
 
     def _save_file(self, content, extension):
         output_dir = self._resolve_output_dir()
-        filename = f"rack_space_{datetime.now():%Y%m%d_%H%M%S}.{extension}"
+        # Общий файл — одна ссылка для всех пользователей
+        filename = f"rack_space_report.{extension}"
         filepath = os.path.join(output_dir, filename)
 
         mode = "wb" if isinstance(content, bytes) else "w"
         kwargs = {"encoding": "utf-8-sig", "newline": ""} if mode == "w" else {}
         with open(filepath, mode, **kwargs) as handle:
             handle.write(content)
+
+        os.chmod(filepath, 0o644)
+        os.chmod(output_dir, 0o755)
 
         return filename, self._media_url(filename)
 
