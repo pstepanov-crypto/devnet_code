@@ -1,7 +1,7 @@
 """
 NetBox Script: выгрузка свободного места в стойках.
 
-После запуска — ссылка «Скачать XLSX» в логе.
+Ссылка на XLSX выводится в начале лога (до списка стоек).
 Зависимость: openpyxl (pip install openpyxl в venv NetBox).
 """
 
@@ -27,6 +27,13 @@ HEADERS = [
     "Всего U",
     "Свободно (front)",
     "Свободно (rear)",
+]
+
+MEDIA_DIR_CANDIDATES = [
+    lambda: os.path.join(settings.MEDIA_ROOT, "script-output"),
+    "/opt/netbox/netbox/media/script-output",
+    "/opt/netbox-4.5.7/netbox/media/script-output",
+    "/opt/netbox-4.3.7/netbox/media/script-output",
 ]
 
 
@@ -62,26 +69,33 @@ class RackUnitSpaceExport(Script):
             "free_rear": total_units - occupied_rear,
         }
 
-    def _rack_rows(self):
-        rows = []
+    def _collect_rack_data(self):
+        items = []
 
         for rack in Rack.objects.select_related("site", "tenant", "location").order_by(
             "site__name", "location__name", "name"
         ):
             units = self._calc_free_units(rack)
-
-            rows.append(
-                {
-                    "site": rack.site.name if rack.site else "",
-                    "tenant": rack.tenant.name if rack.tenant else "",
-                    "location": rack.location.name if rack.location else "",
-                    "rack": rack.name,
-                    "total_units": units["total"],
-                    "free_front": units["free_front"],
-                    "free_rear": units["free_rear"],
-                }
+            items.append(
+                (
+                    rack,
+                    units,
+                    {
+                        "site": rack.site.name if rack.site else "",
+                        "tenant": rack.tenant.name if rack.tenant else "",
+                        "location": rack.location.name if rack.location else "",
+                        "rack": rack.name,
+                        "total_units": units["total"],
+                        "free_front": units["free_front"],
+                        "free_rear": units["free_rear"],
+                    },
+                )
             )
 
+        return items
+
+    def _log_rack_details(self, items):
+        for rack, units, _row in items:
             if units["free_front"] > 0 or units["free_rear"] > 0:
                 self.log_success(
                     f"Свободных юнитов (передняя): {units['free_front']} из {units['total']}, "
@@ -93,8 +107,6 @@ class RackUnitSpaceExport(Script):
                     "Нет свободных юнитов ни на передней, ни на задней стороне.",
                     rack,
                 )
-
-        return rows
 
     def _row_values(self, row):
         return [
@@ -137,25 +149,32 @@ class RackUnitSpaceExport(Script):
 
         return "\ufeff" + buffer.getvalue()
 
-    def _media_url(self, filename):
+    def _download_url(self, filename):
         media_url = settings.MEDIA_URL.rstrip("/")
         if media_url.startswith("http"):
-            return f"{media_url}/script-output/{filename}"
-        if not media_url.startswith("/"):
-            media_url = f"/{media_url}"
-        return f"{media_url}/script-output/{filename}"
+            path = f"{media_url}/script-output/{filename}"
+        else:
+            if not media_url.startswith("/"):
+                media_url = f"/{media_url}"
+            path = f"{media_url}/script-output/{filename}"
+
+        try:
+            from netbox import configuration
+
+            site_url = getattr(configuration, "SITE_URL", "").rstrip("/")
+            if site_url and path.startswith("/"):
+                return f"{site_url}{path}"
+        except ImportError:
+            pass
+
+        return path
 
     def _resolve_output_dir(self):
-        candidates = [
-            os.path.join(settings.MEDIA_ROOT, "script-output"),
-            "/opt/netbox/netbox/media/script-output",
-            "/opt/netbox-4.3.7/netbox/media/script-output",
-        ]
-
         seen = set()
         errors = []
 
-        for output_dir in candidates:
+        for candidate in MEDIA_DIR_CANDIDATES:
+            output_dir = candidate() if callable(candidate) else candidate
             if output_dir in seen:
                 continue
             seen.add(output_dir)
@@ -180,7 +199,6 @@ class RackUnitSpaceExport(Script):
 
     def _save_file(self, content, extension):
         output_dir = self._resolve_output_dir()
-        # Общий файл — одна ссылка для всех пользователей
         filename = f"rack_space_report.{extension}"
         filepath = os.path.join(output_dir, filename)
 
@@ -192,30 +210,41 @@ class RackUnitSpaceExport(Script):
         os.chmod(filepath, 0o644)
         os.chmod(output_dir, 0o755)
 
-        return filename, self._media_url(filename)
+        return filename, self._download_url(filename)
+
+    def _log_download(self, row_count, url, label):
+        self.log_success("=" * 60)
+        self.log_success(f"ОТЧЁТ ГОТОВ — {row_count} стоек")
+        self.log_success(f"[Скачать отчёт в {label}]({url})")
+        self.log_info(f"Прямая ссылка: {url}")
+        self.log_info("Если ссылка не открывается — вкладка Output → Download")
+        self.log_success("=" * 60)
 
     def run(self, data, commit):
-        rows = self._rack_rows()
+        items = self._collect_rack_data()
 
-        if not rows:
+        if not items:
             self.log_warning("Стойки не найдены.")
             return
 
+        rows = [item[2] for item in items]
+        use_xlsx = Workbook is not None
+        report_content = self._build_xlsx(rows) if use_xlsx else self._build_csv(rows)
+        extension = "xlsx" if use_xlsx else "csv"
+        label = "XLSX" if use_xlsx else "CSV"
+
+        if not use_xlsx:
+            self.log_warning("Модуль openpyxl не установлен — выгружен CSV вместо XLSX.")
+
+        # Ссылка в начале лога — до длинного списка стоек
         try:
-            if Workbook is not None:
-                filename, url = self._save_file(self._build_xlsx(rows), "xlsx")
-                self.log_success(
-                    f"Сформирован отчёт по {len(rows)} стойкам. "
-                    f"[Скачать отчёт в XLSX]({url})"
-                )
-            else:
-                filename, url = self._save_file(self._build_csv(rows), "csv")
-                self.log_warning(
-                    "Модуль openpyxl не установлен — выгружен CSV вместо XLSX."
-                )
-                self.log_success(
-                    f"Сформирован отчёт по {len(rows)} стойкам. "
-                    f"[Скачать отчёт в CSV]({url})"
-                )
+            _filename, url = self._save_file(report_content, extension)
+            self._log_download(len(rows), url, label)
         except OSError as exc:
             self.log_failure(f"Не удалось сохранить файл в media:\n{exc}")
+            self.log_info("Файл доступен на вкладке Output → Download")
+            if use_xlsx:
+                return report_content
+            return report_content
+
+        self._log_rack_details(items)
