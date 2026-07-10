@@ -217,7 +217,9 @@ class RackUnitSpaceExport(Script):
         self.log_success(f"ОТЧЁТ ГОТОВ — {row_count} стоек")
         self.log_success(f"[Скачать отчёт в {label}]({url})")
         self.log_info(f"Прямая ссылка: {url}")
-        self.log_info("Если ссылка не открывается — вкладка Output → Download")
+        self.log_info(
+            "Запасной вариант: вкладка Output → Download (CSV, переименуйте .txt в .csv)"
+        )
         self.log_success("=" * 60)
 
     def run(self, data, commit):
@@ -228,8 +230,8 @@ class RackUnitSpaceExport(Script):
             return
 
         rows = [item[2] for item in items]
+        csv_output = self._build_csv(rows)
         use_xlsx = Workbook is not None
-        report_content = self._build_xlsx(rows) if use_xlsx else self._build_csv(rows)
         extension = "xlsx" if use_xlsx else "csv"
         label = "XLSX" if use_xlsx else "CSV"
 
@@ -238,13 +240,14 @@ class RackUnitSpaceExport(Script):
 
         # Ссылка в начале лога — до длинного списка стоек
         try:
-            _filename, url = self._save_file(report_content, extension)
+            file_content = self._build_xlsx(rows) if use_xlsx else csv_output
+            _filename, url = self._save_file(file_content, extension)
             self._log_download(len(rows), url, label)
         except OSError as exc:
             self.log_failure(f"Не удалось сохранить файл в media:\n{exc}")
-            self.log_info("Файл доступен на вкладке Output → Download")
-            if use_xlsx:
-                return report_content
-            return report_content
+            self.log_info("Скачайте отчёт: вкладка Output → Download (переименуйте .txt в .csv)")
 
         self._log_rack_details(items)
+
+        # NetBox всегда скачивает Output как .txt — отдаём CSV-текст для Excel
+        return csv_output
