@@ -85,12 +85,15 @@ class RackUnitSpaceExport(Script):
 
             if units["free_front"] > 0 or units["free_rear"] > 0:
                 self.log_success(
-                    rack,
                     f"Свободных юнитов (передняя): {units['free_front']} из {units['total']}, "
                     f"(задняя): {units['free_rear']} из {units['total']}.",
+                    rack,
                 )
             else:
-                self.log_warning(rack, "Нет свободных юнитов ни на передней, ни на задней стороне.")
+                self.log_warning(
+                    "Нет свободных юнитов ни на передней, ни на задней стороне.",
+                    rack,
+                )
 
         return rows
 
