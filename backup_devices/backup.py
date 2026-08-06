@@ -125,12 +125,12 @@ def create_backup(connection, backup_file_path, hostname):
         return False
 
 
-def get_previous_backup_file_path(hostname, curent_backup_file_path):
+def get_previous_backup_file_path(hostname, current_backup_file_path):
     # This function looks for the previous backup file in a directory
     # Requires a hostname and the latest backup file name as an input
 
     # removing the full path
-    current_backup_filename = curent_backup_file_path.split('/')[-1]
+    current_backup_filename = current_backup_file_path.split('/')[-1]
 
     # creatting an empty dictionary to keep backup file names
     backup_files = {}
@@ -213,7 +213,9 @@ def process_target(device,timestamp):
 
     # if the script managed to create a backup, then look for a previous one
     if backup_result:
-        previous_backup_file_path = get_previous_backup_file_path(device['hostname'], backup_file_path)
+        previous_backup_file_path = get_previous_backup_file_path(
+            device['hostname'], current_backup_file_path=backup_file_path
+        )
 
         # if the previous one exists, compare
         if previous_backup_file_path:

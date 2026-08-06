@@ -208,7 +208,9 @@ def process_target(device, timestamp):
 
     # If the script managed to create a backup, then look for a previous one
     if backup_result:
-        previous_backup_file_path = get_previous_backup_file_path(device['hostname'], backup_file_path)
+        previous_backup_file_path = get_previous_backup_file_path(
+            device['hostname'], current_backup_file_path=backup_file_path
+        )
 
         # If the previous one exists, compare
         if previous_backup_file_path:
