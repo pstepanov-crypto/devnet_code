@@ -12,7 +12,10 @@ from netmiko import (
 def send_show_command(device, commands):
     with ConnectHandler(**device) as ssh:
         ssh.enable()
-        result = ssh.send_config_set(commands)
+        if isinstance(commands, (list, tuple)):
+            result = ssh.send_command(commands[0])
+        else:
+            result = ssh.send_command(commands)
     return result
     
 
